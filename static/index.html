@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VillanScript ☠</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Metal+Mania&family=Creepster&family=Oswald:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{cursor:crosshair;scroll-behavior:smooth}
+    body{font-family:'Oswald',sans-serif;min-height:100vh;overflow-x:hidden;background:#08000f;color:#fff0e0;}
+
+    /* ── PAGES ── */
+    .page{display:none;min-height:100vh;}
+    .page.active{display:block;animation:pgIn .32s ease;}
+    @keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── SCANLINES ── */
+    .scanlines{position:fixed;inset:0;z-index:200;pointer-events:none;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);}
+
+    /* ── TOAST ── */
+    #toast{position:fixed;bottom:24px;right:24px;z-index:9999;
+      padding:11px 22px;border-radius:4px;border:1px solid #ff6600;
+      background:#130800;color:#ffaa44;
+      font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.14em;
+      box-shadow:0 0 18px rgba(255,102,0,.35);
+      transform:translateY(70px);opacity:0;transition:all .28s ease;pointer-events:none;}
+    #toast.show{transform:translateY(0);opacity:1;}
+
+    /* ── NAVBAR ── */
+    .navbar{
+      position:fixed;top:0;left:0;right:0;z-index:999;
+      display:flex;align-items:center;gap:10px;
+      padding:0 20px;height:58px;
+      background:rgba(4,0,10,0.96);border-bottom:2px solid #ff2200;
+      backdrop-filter:blur(12px);transition:border-color .35s;
+    }
+    .navbar.t-menacing{border-color:#8800ff;}
+    .navbar.t-dramatic{border-color:#ff6600;}
+    .navbar.t-unhinged{border-color:#00ffaa;}
+    .navbar.t-history {border-color:#ffcc00;}
+    .navbar.t-favs    {border-color:#ff44aa;}
+    .navbar.t-stats   {border-color:#44aaff;}
+
+    .nav-logo{font-family:'Metal Mania',cursive;font-size:1.35rem;letter-spacing:.06em;
+      cursor:pointer;color:#ff4400;text-shadow:0 0 10px #ff2200;transition:all .25s;white-space:nowrap;flex-shrink:0;}
+    .nav-logo:hover{transform:scale(1.04);}
+
+    .nav-links{display:flex;gap:3px;flex-wrap:wrap;flex:1;}
+    .nbtn{padding:5px 11px;background:transparent;border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.42);font-family:'Bebas Neue',sans-serif;
+      font-size:.75rem;letter-spacing:.12em;cursor:pointer;border-radius:3px;transition:all .2s;}
+    .nbtn:hover{color:#fff;border-color:rgba(255,255,255,.35);}
+    .nbtn.active{color:#fff;}
+    .nbtn[data-p="menacing"].active{color:#cc88ff;border-color:#8800ff;box-shadow:0 0 10px rgba(136,0,255,.35);}
+    .nbtn[data-p="dramatic"].active{color:#ffaa44;border-color:#ff6600;box-shadow:0 0 10px rgba(255,102,0,.35);}
+    .nbtn[data-p="unhinged"].active{color:#00ffaa;border-color:#00ffaa;box-shadow:0 0 10px rgba(0,255,170,.35);}
+    .nbtn[data-p="history"].active {color:#ffee44;border-color:#ffcc00;box-shadow:0 0 10px rgba(255,204,0,.35);}
+    .nbtn[data-p="favs"].active    {color:#ff88cc;border-color:#ff44aa;box-shadow:0 0 10px rgba(255,68,170,.35);}
+    .nbtn[data-p="stats"].active   {color:#88ccff;border-color:#44aaff;box-shadow:0 0 10px rgba(68,170,255,.35);}
+
+    .rank-pill{padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;
+      background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.3);
+      color:#ffcc44;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.12em;
+      text-shadow:0 0 8px rgba(255,204,0,.5);}
+
+    /* ── SHARED CONTAINER ── */
+    .pg{max-width:1020px;margin:0 auto;padding:80px 18px 60px;}
+
+    /* ═══════════════════════════════════════
+       HOME
+    ═══════════════════════════════════════ */
+    #page-home{background:radial-gradient(ellipse 90% 65% at 50% 0%,rgba(255,34,0,.15),transparent 60%),#08000f;}
+    .home-c{max-width:980px;margin:0 auto;padding:108px 18px 60px;text-align:center;}
+    .skulls{display:flex;justify-content:center;gap:16px;margin-bottom:12px;}
+    .sk{font-size:2.5rem;filter:drop-shadow(0 0 12px #ff2200);animation:bob 2.5s ease-in-out infinite;}
+    .sk:nth-child(2){font-size:3.2rem;animation-delay:.25s;}
+    .sk:nth-child(3){animation-delay:.5s;}
+    @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+    .htitle{font-family:'Metal Mania',cursive;font-size:clamp(3.2rem,10vw,7.5rem);line-height:.9;
+      background:linear-gradient(180deg,#fff 0%,#ff4400 35%,#ff8800 65%,#660000 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      filter:drop-shadow(0 0 38px rgba(255,34,0,.88));animation:tf 3s ease-in-out infinite;margin-bottom:12px;}
+    @keyframes tf{0%,100%{filter:drop-shadow(0 0 38px rgba(255,34,0,.88))}50%{filter:drop-shadow(0 0 60px rgba(255,34,0,1))}}
+    .hsub{font-family:'Creepster',cursive;font-size:1.1rem;letter-spacing:.26em;color:#aaff00;text-shadow:0 0 16px #aaff00;margin-bottom:52px;}
+
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:860px;margin:0 auto;}
+    .card{border-radius:6px;cursor:pointer;transition:transform .28s,box-shadow .28s;}
+    .card:hover{transform:translateY(-7px) scale(1.015);}
+    .card-in{padding:32px 20px 28px;border:2px solid;border-radius:6px;position:relative;height:100%;}
+    .card-in::before,.card-in::after{content:'';position:absolute;width:16px;height:16px;border-style:solid;opacity:.5;}
+    .card-in::before{top:7px;left:7px;border-width:2px 0 0 2px;}
+    .card-in::after{bottom:7px;right:7px;border-width:0 2px 2px 0;}
+    .cm .card-in{background:linear-gradient(160deg,#0d001a,#1a0030);border-color:#8800ff;box-shadow:0 0 24px rgba(136,0,255,.2);}
+    .cm .card-in::before,.cm .card-in::after{border-color:#8800ff;}
+    .cm:hover .card-in{box-shadow:0 0 50px rgba(136,0,255,.5);}
+    .cd .card-in{background:linear-gradient(160deg,#1a0800,#2a1000);border-color:#ff6600;box-shadow:0 0 24px rgba(255,102,0,.2);}
+    .cd .card-in::before,.cd .card-in::after{border-color:#ff6600;}
+    .cd:hover .card-in{box-shadow:0 0 50px rgba(255,102,0,.5);}
+    .cu .card-in{background:linear-gradient(160deg,#00100a,#001a10);border-color:#00ffaa;box-shadow:0 0 24px rgba(0,255,170,.15);}
+    .cu .card-in::before,.cu .card-in::after{border-color:#00ffaa;}
+    .cu:hover .card-in{box-shadow:0 0 50px rgba(0,255,170,.4);}
+    .cemi{font-size:3rem;display:block;margin-bottom:12px;}
+    .ctit{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.14em;margin-bottom:9px;}
+    .cm .ctit{color:#cc88ff;text-shadow:0 0 10px #8800ff;}
+    .cd .ctit{color:#ffaa44;text-shadow:0 0 10px #ff6600;}
+    .cu .ctit{color:#00ffaa;text-shadow:0 0 10px #00ffaa;}
+    .cdesc{font-size:.86rem;line-height:1.6;color:rgba(255,240,224,.58);margin-bottom:20px;}
+    .ccta{display:inline-block;padding:7px 22px;border:1px solid;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.17em;transition:all .2s;}
+    .cm .ccta{color:#cc88ff;border-color:#8800ff;} .cm:hover .ccta{background:#8800ff;color:#fff;}
+    .cd .ccta{color:#ffaa44;border-color:#ff6600;} .cd:hover .ccta{background:#ff6600;color:#fff;}
+    .cu .ccta{color:#00ffaa;border-color:#00ffaa;} .cu:hover .ccta{background:#009966;color:#fff;}
+
+    /* ═══════════════════════════════════════
+       VILLAIN PAGES SHARED
+    ═══════════════════════════════════════ */
+    .vhdr{text-align:center;margin-bottom:36px;}
+    .vbadge{display:inline-block;padding:3px 18px;border:1px solid;border-radius:2px;
+      font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.22em;margin-bottom:12px;}
+    .vtit{font-family:'Metal Mania',cursive;font-size:clamp(2.2rem,6.5vw,4.8rem);line-height:1;margin-bottom:7px;}
+    .vsub{font-family:'Creepster',cursive;font-size:1rem;letter-spacing:.17em;}
+    .vdiv{display:flex;align-items:center;gap:10px;margin:14px auto;max-width:340px;}
+    .vdivl{flex:1;height:2px;}
+
+    .rewriter{border:2px solid;border-radius:6px;overflow:hidden;}
+    .pgrid{display:grid;grid-template-columns:1fr 1fr;}
+    .rp{position:relative;}
+    .rp:first-child{border-right:1px solid rgba(255,255,255,.08);}
+    .rph{padding:11px 16px;display:flex;align-items:center;gap:7px;border-bottom:1px solid;}
+    .rpl{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.2em;}
+    textarea{width:100%;height:195px;background:transparent;border:none;padding:16px;
+      color:#fff0e0;font-family:'Oswald',sans-serif;font-size:.98rem;line-height:1.8;resize:none;outline:none;}
+    textarea::placeholder{color:rgba(200,180,180,.32);font-style:italic;}
+    .outbox{min-height:195px;max-height:270px;padding:16px;overflow-y:auto;position:relative;}
+    .opl{color:rgba(200,180,180,.32);font-style:italic;font-size:.92rem;}
+    .vt{font-family:'Creepster',cursive;font-size:1.28rem;line-height:1.9;}
+    .vt.typing::after{content:'█';animation:blk .5s infinite;}
+    @keyframes blk{0%,100%{opacity:1}50%{opacity:0}}
+
+    .rfooter{border-top:1px solid;display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap;background:rgba(0,0,0,.3);}
+    .sbtn{padding:10px 26px;border:none;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.15em;cursor:pointer;color:#fff;transition:all .2s;}
+    .sbtn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.18);}
+    .sbtn:disabled{opacity:.45;cursor:not-allowed;}
+    .wcount{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.1em;margin-left:auto;opacity:.42;}
+
+    /* action buttons on output panel */
+    .out-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;}
+    .oact{background:transparent;border:1px solid;border-radius:2px;padding:3px 10px;
+      font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:.1em;cursor:pointer;transition:all .2s;display:none;}
+    .oact.visible{display:block;}
+
+    /* ── menacing ── */
+    #page-menacing{background:radial-gradient(ellipse 78% 52% at 50% 0%,rgba(100,0,200,.16),transparent 58%),#07000f;}
+    #page-menacing .vbadge{color:#cc88ff;border-color:rgba(136,0,255,.38);background:rgba(136,0,255,.07);}
+    #page-menacing .vtit{background:linear-gradient(180deg,#fff 0%,#cc88ff 40%,#8800ff 80%,#330066 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 26px rgba(136,0,255,.78));}
+    #page-menacing .vsub{color:#aa66ff;}
+    #page-menacing .vdivl{background:linear-gradient(to right,transparent,#8800ff,transparent);}
+    #page-menacing .rewriter{border-color:#8800ff;box-shadow:0 0 30px rgba(136,0,255,.15);}
+    #page-menacing .rph{background:rgba(136,0,255,.06);border-bottom-color:rgba(136,0,255,.18);}
+    #page-menacing .rpl{color:#aa66ff;}
+    #page-menacing .rfooter{border-top-color:rgba(136,0,255,.18);}
+    #page-menacing .sbtn{background:linear-gradient(135deg,#5500aa,#8800ff);box-shadow:0 0 20px rgba(136,0,255,.42);}
+    #page-menacing .vt{color:#e0c8ff;text-shadow:0 0 9px rgba(136,0,255,.52);}
+    #page-menacing .vt.typing::after{color:#8800ff;}
+    #page-menacing .oact{color:#aa66ff;border-color:rgba(136,0,255,.35);}
+    #page-menacing .oact:hover{background:rgba(136,0,255,.18);}
+
+    /* ── dramatic ── */
+    #page-dramatic{background:radial-gradient(ellipse 78% 48% at 50% 0%,rgba(255,80,0,.16),transparent 53%),#0f0500;}
+    #page-dramatic .vbadge{color:#ffaa44;border-color:rgba(255,102,0,.38);background:rgba(255,102,0,.07);}
+    #page-dramatic .vtit{background:linear-gradient(180deg,#fff 0%,#ffcc44 28%,#ff6600 62%,#880000 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 26px rgba(255,102,0,.88));}
+    #page-dramatic .vsub{color:#ffaa44;}
+    #page-dramatic .vdivl{background:linear-gradient(to right,transparent,#ff6600,transparent);}
+    #page-dramatic .rewriter{border-color:#ff6600;box-shadow:0 0 30px rgba(255,102,0,.15);}
+    #page-dramatic .rph{background:rgba(255,102,0,.06);border-bottom-color:rgba(255,102,0,.18);}
+    #page-dramatic .rpl{color:#ffaa44;}
+    #page-dramatic .rfooter{border-top-color:rgba(255,102,0,.18);}
+    #page-dramatic .sbtn{background:linear-gradient(135deg,#cc3300,#ff6600,#ffaa00);box-shadow:0 0 20px rgba(255,102,0,.48);animation:dp 2s infinite;}
+    @keyframes dp{0%,100%{box-shadow:0 0 20px rgba(255,102,0,.48)}50%{box-shadow:0 0 38px rgba(255,102,0,1)}}
+    #page-dramatic .vt{color:#fff0c0;text-shadow:0 0 9px rgba(255,150,0,.58);}
+    #page-dramatic .vt.typing::after{color:#ff6600;}
+    #page-dramatic .oact{color:#ffaa44;border-color:rgba(255,102,0,.35);}
+    #page-dramatic .oact:hover{background:rgba(255,102,0,.18);}
+
+    /* ── unhinged ── */
+    #page-unhinged{background:radial-gradient(ellipse 78% 48% at 50% 0%,rgba(0,200,100,.12),transparent 53%),#000f08;}
+    #page-unhinged .vbadge{color:#00ffaa;border-color:rgba(0,255,170,.38);background:rgba(0,255,170,.05);}
+    #page-unhinged .vtit{background:linear-gradient(180deg,#fff 0%,#aaffcc 28%,#00ffaa 58%,#006644 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 26px rgba(0,255,170,.78));}
+    #page-unhinged .vsub{color:#00ffaa;animation:uflk 3s infinite;}
+    @keyframes uflk{0%,89%,91%,93%,100%{opacity:1}90%,92%{opacity:.35}}
+    #page-unhinged .vdivl{background:linear-gradient(to right,transparent,#00ffaa,transparent);}
+    #page-unhinged .rewriter{border-color:#00ffaa;box-shadow:0 0 30px rgba(0,255,170,.12);}
+    #page-unhinged .rph{background:rgba(0,255,170,.04);border-bottom-color:rgba(0,255,170,.14);}
+    #page-unhinged .rpl{color:#00ffaa;}
+    #page-unhinged .rfooter{border-top-color:rgba(0,255,170,.14);}
+    #page-unhinged .sbtn{background:linear-gradient(135deg,#006633,#00aa66,#00ffaa);box-shadow:0 0 20px rgba(0,255,170,.32);color:#000;}
+    #page-unhinged .vt{color:#ccffee;text-shadow:0 0 9px rgba(0,255,170,.52);}
+    #page-unhinged .vt.typing::after{color:#00ffaa;}
+    #page-unhinged .oact{color:#00ffaa;border-color:rgba(0,255,170,.35);}
+    #page-unhinged .oact:hover{background:rgba(0,255,170,.1);}
+    #page-unhinged.shaking{animation:shk .38s ease;}
+    @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-.4deg)}40%{transform:translateX(5px) rotate(.4deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+    /* ═══════════════════════════════════════
+       HISTORY  &  FAVS  shared
+    ═══════════════════════════════════════ */
+    #page-history{background:radial-gradient(ellipse 70% 48% at 50% 0%,rgba(255,204,0,.1),transparent 55%),#0a0800;}
+    #page-favs   {background:radial-gradient(ellipse 70% 48% at 50% 0%,rgba(255,68,170,.1),transparent 55%),#0a0008;}
+
+    .ptitle{font-family:'Metal Mania',cursive;font-size:clamp(1.9rem,5.5vw,3.8rem);
+      text-align:center;margin-bottom:5px;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .psub{text-align:center;font-family:'Creepster',cursive;font-size:.95rem;letter-spacing:.18em;margin-bottom:32px;}
+    #page-history .ptitle{background:linear-gradient(180deg,#fff,#ffee44 40%,#ffaa00);filter:drop-shadow(0 0 18px rgba(255,204,0,.65));}
+    #page-history .psub{color:#ffcc44;}
+    #page-favs .ptitle{background:linear-gradient(180deg,#fff,#ff88cc 40%,#ff44aa);filter:drop-shadow(0 0 18px rgba(255,68,170,.65));}
+    #page-favs .psub{color:#ff88cc;}
+
+    .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+    .toolbar input{flex:1;min-width:160px;background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.15);border-radius:4px;
+      padding:8px 14px;color:#fff0e0;font-family:'Oswald',sans-serif;font-size:.92rem;outline:none;}
+    .toolbar input:focus{border-color:rgba(255,204,0,.4);}
+    .toolbar input::placeholder{color:rgba(255,240,224,.3);}
+    .mf{display:flex;gap:5px;}
+    .mfb{padding:5px 12px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.72rem;
+      letter-spacing:.11em;cursor:pointer;border:1px solid rgba(255,255,255,.14);
+      color:rgba(255,255,255,.38);background:transparent;transition:all .2s;}
+    .mfb.active{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.07);}
+    .tbtn{padding:7px 15px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;
+      letter-spacing:.12em;cursor:pointer;border:1px solid;transition:all .2s;background:transparent;}
+    .tbtn-y{border-color:rgba(255,204,0,.38);color:#ffcc44;}
+    .tbtn-y:hover{background:rgba(255,204,0,.1);}
+    .tbtn-r{border-color:rgba(255,60,0,.35);color:#ff6644;}
+    .tbtn-r:hover{background:rgba(255,60,0,.1);}
+
+    .hlist{display:flex;flex-direction:column;gap:10px;}
+    .hcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+      border-radius:5px;padding:14px 18px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;transition:border-color .2s;}
+    .hcard:hover{border-color:rgba(255,255,255,.18);}
+    .hcard-mode{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:.17em;opacity:.55;margin-bottom:4px;}
+    .hcard-in{font-size:.85rem;color:rgba(255,240,224,.55);margin-bottom:5px;font-style:italic;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .hcard-out{font-family:'Creepster',cursive;font-size:1.02rem;line-height:1.55;}
+    .hcard-out.menacing{color:#cc88ff;} .hcard-out.dramatic{color:#ffbb66;} .hcard-out.unhinged{color:#66ffcc;}
+    .hcard-time{font-size:.7rem;color:rgba(255,240,224,.28);margin-top:3px;}
+    .hcard-acts{display:flex;gap:5px;flex-shrink:0;}
+    .hact{background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:3px;
+      padding:4px 9px;cursor:pointer;font-size:.82rem;transition:all .2s;color:rgba(255,240,224,.55);}
+    .hact:hover{background:rgba(255,255,255,.06);color:#fff;}
+    .hact.fav-on{color:#ff44aa;border-color:rgba(255,68,170,.35);background:rgba(255,68,170,.08);}
+    .hact.del:hover{background:rgba(255,60,0,.12);color:#ff5544;}
+    .empty{text-align:center;padding:52px 20px;color:rgba(255,240,224,.3);font-family:'Creepster',cursive;font-size:1.3rem;}
+
+    /* ═══════════════════════════════════════
+       STATS
+    ═══════════════════════════════════════ */
+    #page-stats{background:radial-gradient(ellipse 70% 48% at 50% 0%,rgba(68,170,255,.1),transparent 55%),#00080f;}
+    #page-stats .ptitle{background:linear-gradient(180deg,#fff,#88ccff 40%,#44aaff);filter:drop-shadow(0 0 18px rgba(68,170,255,.65));}
+    #page-stats .psub{color:#88ccff;}
+
+    .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+    .scard{background:rgba(68,170,255,.05);border:1px solid rgba(68,170,255,.18);border-radius:5px;
+      padding:20px 18px;text-align:center;transition:border-color .2s;}
+    .scard:hover{border-color:rgba(68,170,255,.35);}
+    .sval{font-family:'Metal Mania',cursive;font-size:2.6rem;color:#88ccff;text-shadow:0 0 13px rgba(68,170,255,.55);line-height:1;}
+    .slbl{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.18em;color:rgba(255,240,224,.42);margin-top:5px;}
+
+    .rank-box{background:rgba(255,204,0,.05);border:1px solid rgba(255,204,0,.22);border-radius:5px;
+      padding:24px;margin-bottom:22px;text-align:center;}
+    .rlabel{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.22em;color:rgba(255,204,0,.45);margin-bottom:7px;}
+    .rname{font-family:'Metal Mania',cursive;font-size:2.2rem;color:#ffcc44;text-shadow:0 0 18px rgba(255,204,0,.65);}
+    .rxp{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.13em;color:rgba(255,204,0,.55);margin-top:5px;}
+    .xpbar-wrap{background:rgba(255,204,0,.09);border-radius:3px;height:7px;margin-top:12px;overflow:hidden;}
+    .xpbar{height:100%;background:linear-gradient(90deg,#ffaa00,#ffee00);border-radius:3px;transition:width .75s ease;}
+
+    .mbars{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:20px;margin-bottom:20px;}
+    .mbh{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.18em;color:rgba(255,240,224,.38);margin-bottom:16px;}
+    .mrow{margin-bottom:12px;}
+    .mlbl{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:.13em;margin-bottom:4px;}
+    .mbarw{background:rgba(255,255,255,.06);border-radius:2px;height:9px;overflow:hidden;}
+    .mbar{height:100%;border-radius:2px;transition:width .75s ease;}
+    .rm .mlbl{color:#cc88ff;} .rm .mbar{background:linear-gradient(90deg,#5500aa,#cc88ff);}
+    .rd .mlbl{color:#ffaa44;} .rd .mbar{background:linear-gradient(90deg,#cc3300,#ffaa44);}
+    .ru .mlbl{color:#00ffaa;} .ru .mbar{background:linear-gradient(90deg,#006633,#00ffaa);}
+
+    .ibox{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:20px;}
+    .irow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+    .irow:last-child{border-bottom:none;}
+    .iname{font-family:'Bebas Neue',sans-serif;font-size:.84rem;letter-spacing:.12em;color:rgba(255,240,224,.65);}
+    .icount{font-family:'Metal Mania',cursive;font-size:1.08rem;color:#88ccff;}
+
+    /* ── scrollbar ── */
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:#ff2200;border-radius:2px;}
+
+    /* ── responsive ── */
+    @media(max-width:640px){
+      .cards,.pgrid{grid-template-columns:1fr;}
+      .rp:first-child{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+      textarea,.outbox{height:155px;}
+      .nav-links{gap:2px;} .nbtn{padding:4px 7px;font-size:.68rem;}
+      .navbar{flex-wrap:wrap;height:auto;padding:8px 12px;}
+    }
+  </style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div id="toast"></div>
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="navbar" id="nav">
+  <div class="nav-logo" onclick="go('home')">☠ VILLANSCRIPT</div>
+  <div class="nav-links">
+    <button class="nbtn active" data-p="home"     onclick="go('home')">🏠</button>
+    <button class="nbtn"        data-p="menacing" onclick="go('menacing')"><span>😈 MENACING</span></button>
+    <button class="nbtn"        data-p="dramatic" onclick="go('dramatic')"><span>🎭 DRAMATIC</span></button>
+    <button class="nbtn"        data-p="unhinged" onclick="go('unhinged')"><span>🌑 UNHINGED</span></button>
+    <button class="nbtn"        data-p="history"  onclick="go('history')"><span>📜 HISTORY</span></button>
+    <button class="nbtn"        data-p="favs"     onclick="go('favs')"><span>❤️ FAVS</span></button>
+    <button class="nbtn"        data-p="stats"    onclick="go('stats')"><span>📊 STATS</span></button>
+  </div>
+  <div class="rank-pill" id="rankPill">☠ PATHETIC MINION</div>
+</nav>
+
+<!-- ══════════ HOME ══════════ -->
+<div class="page active" id="page-home">
+  <div class="home-c">
+    <div class="skulls"><span class="sk">💀</span><span class="sk">☠</span><span class="sk">💀</span></div>
+    <h1 class="htitle">VILLANSCRIPT</h1>
+    <p class="hsub">⚡ YOUR WORDS. DESTROYED. REBORN. WEAPONIZED. ⚡</p>
+    <div class="cards">
+      <div class="card cm" onclick="go('menacing')">
+        <div class="card-in"><span class="cemi">😈</span><div class="ctit">MENACING</div><p class="cdesc">Cold. Calculated. Devastating. Every word a blade, every sentence a threat wrapped in velvet.</p><span class="ccta">ENTER THE VOID →</span></div>
+      </div>
+      <div class="card cd" onclick="go('dramatic')">
+        <div class="card-in"><span class="cemi">🎭</span><div class="ctit">DRAMATIC</div><p class="cdesc">Theatrical. Explosive. Legendary. Every statement a PROCLAMATION. Every word a DECLARATION OF WAR.</p><span class="ccta">IGNITE THE STAGE →</span></div>
+      </div>
+      <div class="card cu" onclick="go('unhinged')">
+        <div class="card-in"><span class="cemi">🌑</span><div class="ctit">UNHINGED</div><p class="cdesc">Chaotic. Manic. Gloriously broken. Logic optional. The Plan always in motion. MWAHAHAHA.</p><span class="ccta">EMBRACE THE CHAOS →</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MENACING ══════════ -->
+<div class="page" id="page-menacing">
+  <div class="pg">
+    <div class="vhdr">
+      <div class="vbadge">😈 VILLAIN MODE ACTIVE</div>
+      <h2 class="vtit">MENACING</h2>
+      <p class="vsub">— cold. calculating. inevitable. —</p>
+      <div class="vdiv"><div class="vdivl"></div><span>🗡</span><div class="vdivl"></div></div>
+    </div>
+    <div class="rewriter">
+      <div class="pgrid">
+        <div class="rp">
+          <div class="rph"><span>📜</span><span class="rpl">YOUR PATHETIC INPUT</span></div>
+          <textarea id="m-in" placeholder="Type your feeble words… I'll make them worth fearing." oninput="wc('m')"></textarea>
+        </div>
+        <div class="rp">
+          <div class="rph"><span>🔮</span><span class="rpl">THE VILLAIN SPEAKS</span></div>
+          <div class="outbox" id="m-out"><span class="opl">Speak… and I shall twist your words into something worthy of dread.</span></div>
+          <div class="out-actions">
+            <button class="oact" id="m-cp"  onclick="cpOut('m')">⚡ COPY</button>
+            <button class="oact" id="m-spk" onclick="speak('m')">🔊</button>
+            <button class="oact" id="m-sav" onclick="saveFavFromPage('m')">❤️ FAV</button>
+          </div>
+        </div>
+      </div>
+      <div class="rfooter">
+        <button class="sbtn" id="m-btn" onclick="summon('menacing')">😈 UNLEASH MENACE</button>
+        <span class="wcount" id="m-wc">0 WORDS</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DRAMATIC ══════════ -->
+<div class="page" id="page-dramatic">
+  <div class="pg">
+    <div class="vhdr">
+      <div class="vbadge">🎭 VILLAIN MODE ACTIVE</div>
+      <h2 class="vtit">DRAMATIC</h2>
+      <p class="vsub">— theatrical. explosive. LEGENDARY. —</p>
+      <div class="vdiv"><div class="vdivl"></div><span>🔥</span><div class="vdivl"></div></div>
+    </div>
+    <div class="rewriter">
+      <div class="pgrid">
+        <div class="rp">
+          <div class="rph"><span>📜</span><span class="rpl">YOUR ORDINARY WORDS</span></div>
+          <textarea id="d-in" placeholder="Type anything… watch it become LEGENDARY." oninput="wc('d')"></textarea>
+        </div>
+        <div class="rp">
+          <div class="rph"><span>🌋</span><span class="rpl">THE STAGE IS SET</span></div>
+          <div class="outbox" id="d-out"><span class="opl">The curtain rises… speak and the heavens will TREMBLE.</span></div>
+          <div class="out-actions">
+            <button class="oact" id="d-cp"  onclick="cpOut('d')">⚡ COPY</button>
+            <button class="oact" id="d-spk" onclick="speak('d')">🔊</button>
+            <button class="oact" id="d-sav" onclick="saveFavFromPage('d')">❤️ FAV</button>
+          </div>
+        </div>
+      </div>
+      <div class="rfooter">
+        <button class="sbtn" id="d-btn" onclick="summon('dramatic')">🎭 IGNITE THE STAGE</button>
+        <span class="wcount" id="d-wc">0 WORDS</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ UNHINGED ══════════ -->
+<div class="page" id="page-unhinged">
+  <div class="pg">
+    <div class="vhdr">
+      <div class="vbadge">🌑 VILLAIN MODE: CRITICAL</div>
+      <h2 class="vtit">UNHINGED</h2>
+      <p class="vsub">— the plan is always in motion — MWAHAHAHA —</p>
+      <div class="vdiv"><div class="vdivl"></div><span>💀</span><div class="vdivl"></div></div>
+    </div>
+    <div class="rewriter">
+      <div class="pgrid">
+        <div class="rp">
+          <div class="rph"><span>📜</span><span class="rpl">FEED THE MACHINE</span></div>
+          <textarea id="u-in" placeholder="Type anything… THE PLAN HAS A PLACE FOR EVERYTHING." oninput="wc('u')"></textarea>
+        </div>
+        <div class="rp">
+          <div class="rph"><span>🧠</span><span class="rpl">THE BOARD RESPONDS</span></div>
+          <div class="outbox" id="u-out"><span class="opl">The rats are listening… the board is ready… SPEAK.</span></div>
+          <div class="out-actions">
+            <button class="oact" id="u-cp"  onclick="cpOut('u')">⚡ STEAL</button>
+            <button class="oact" id="u-spk" onclick="speak('u')">🔊</button>
+            <button class="oact" id="u-sav" onclick="saveFavFromPage('u')">❤️ FAV</button>
+          </div>
+        </div>
+      </div>
+      <div class="rfooter">
+        <button class="sbtn" id="u-btn" onclick="summon('unhinged')">🌑 ACTIVATE THE PLAN</button>
+        <span class="wcount" id="u-wc">0 WORDS</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HISTORY ══════════ -->
+<div class="page" id="page-history">
+  <div class="pg">
+    <h2 class="ptitle">📜 DARK ARCHIVES</h2>
+    <p class="psub">every evil utterance… preserved forever</p>
+    <div class="toolbar">
+      <input type="text" id="h-search" placeholder="🔍 Search archives…" oninput="renderHist()"/>
+      <div class="mf">
+        <button class="mfb active" data-m="" onclick="setMf(this,'')">ALL</button>
+        <button class="mfb" data-m="menacing" onclick="setMf(this,'menacing')">😈</button>
+        <button class="mfb" data-m="dramatic" onclick="setMf(this,'dramatic')">🎭</button>
+        <button class="mfb" data-m="unhinged" onclick="setMf(this,'unhinged')">🌑</button>
+      </div>
+      <button class="tbtn tbtn-y" onclick="loadHist()">↻</button>
+      <button class="tbtn tbtn-r" onclick="clearHist()">🗑 CLEAR</button>
+    </div>
+    <div class="hlist" id="hlist"><div class="empty">The archives await your first dark utterance…</div></div>
+  </div>
+</div>
+
+<!-- ══════════ FAVS ══════════ -->
+<div class="page" id="page-favs">
+  <div class="pg">
+    <h2 class="ptitle">❤️ CHOSEN DARKNESS</h2>
+    <p class="psub">your most beloved villainous proclamations</p>
+    <div class="hlist" id="flist"><div class="empty">No favourites yet… star something worthy.</div></div>
+  </div>
+</div>
+
+<!-- ══════════ STATS ══════════ -->
+<div class="page" id="page-stats">
+  <div class="pg">
+    <h2 class="ptitle">📊 VILLAIN DOSSIER</h2>
+    <p class="psub">your complete record of dark achievements</p>
+    <div class="rank-box">
+      <div class="rlabel">⚔ CURRENT VILLAIN RANK ⚔</div>
+      <div class="rname" id="s-rank">PATHETIC MINION</div>
+      <div class="rxp"   id="s-xp">0 XP · 50 XP to next rank</div>
+      <div class="xpbar-wrap"><div class="xpbar" id="s-xpbar" style="width:0%"></div></div>
+    </div>
+    <div class="sgrid">
+      <div class="scard"><div class="sval" id="s-total">0</div><div class="slbl">TOTAL REWRITES</div></div>
+      <div class="scard"><div class="sval" id="s-men">0</div><div class="slbl">😈 MENACING</div></div>
+      <div class="scard"><div class="sval" id="s-dra">0</div><div class="slbl">🎭 DRAMATIC</div></div>
+      <div class="scard"><div class="sval" id="s-unh">0</div><div class="slbl">🌑 UNHINGED</div></div>
+    </div>
+    <div class="mbars">
+      <div class="mbh">MODE BREAKDOWN</div>
+      <div class="mrow rm"><div class="mlbl">😈 MENACING</div><div class="mbarw"><div class="mbar" id="mb-m" style="width:0%"></div></div></div>
+      <div class="mrow rd"><div class="mlbl">🎭 DRAMATIC</div><div class="mbarw"><div class="mbar" id="mb-d" style="width:0%"></div></div></div>
+      <div class="mrow ru"><div class="mlbl">🌑 UNHINGED</div><div class="mbarw"><div class="mbar" id="mb-u" style="width:0%"></div></div></div>
+    </div>
+    <div class="ibox">
+      <div class="mbh">TOP DETECTED INTENTS</div>
+      <div id="s-intents"><div style="color:rgba(255,240,224,.3);font-style:italic;font-size:.9rem">No data yet…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ JS ══════════ -->
+<script>
+// ── API helpers ───────────────────────────────────────────────────────────────
+const api = async (method, path, body) => {
+  const r = await fetch('/api'+path, {
+    method, headers:{'Content-Type':'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return r.json();
+};
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+const navTheme = {home:'',menacing:'t-menacing',dramatic:'t-dramatic',unhinged:'t-unhinged',history:'t-history',favs:'t-favs',stats:'t-stats'};
+
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nbtn').forEach(b => b.classList.toggle('active', b.dataset.p === page));
+  const nav = document.getElementById('nav');
+  nav.className = 'navbar ' + (navTheme[page] || '');
+  window.scrollTo(0, 0);
+  if (page === 'history') loadHist();
+  if (page === 'favs')    loadFavs();
+  if (page === 'stats')   loadStats();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, ms=2100) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ── WORD COUNT ────────────────────────────────────────────────────────────────
+function wc(p) {
+  const v = document.getElementById(p+'-in').value;
+  document.getElementById(p+'-wc').textContent = (v.trim() ? v.trim().split(/\s+/).length : 0) + ' WORDS';
+}
+
+// ── SUMMON (calls backend) ────────────────────────────────────────────────────
+const modeMap = {menacing:'m', dramatic:'d', unhinged:'u'};
+const btnLabel = {m:'😈 UNLEASH MENACE', d:'🎭 IGNITE THE STAGE', u:'🌑 ACTIVATE THE PLAN'};
+let lastId = {};
+
+async function summon(mode) {
+  const p = modeMap[mode];
+  const text = document.getElementById(p+'-in').value.trim();
+  const outEl = document.getElementById(p+'-out');
+  const btn   = document.getElementById(p+'-btn');
+
+  if (!text) {
+    outEl.innerHTML = '<span class="vt" style="opacity:.8">You dare come to me with NOTHING?! Speak — then I\'ll decide if you\'re worth my time.</span>';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '⚡ CHANNELING...';
+  hideActions(p);
+  outEl.innerHTML = '<span class="opl" style="opacity:.5">The darkness stirs…</span>';
+
+  if (mode === 'unhinged') {
+    const pg = document.getElementById('page-unhinged');
+    pg.classList.add('shaking'); setTimeout(() => pg.classList.remove('shaking'), 400);
+  }
+
+  try {
+    const data = await api('POST', '/rewrite', {text, mode});
+    lastId[p] = data.id;
+    setTimeout(() => {
+      typeText(outEl, data.output, p, () => {
+        showActions(p);
+        btn.disabled = false; btn.textContent = btnLabel[p];
+        document.getElementById('rankPill').textContent = '☠ ' + data.rank.toUpperCase();
+      });
+    }, 360);
+  } catch(e) {
+    outEl.innerHTML = '<span class="vt" style="color:#ff4444">⚡ Server unreachable. Run app.py first!</span>';
+    btn.disabled = false; btn.textContent = btnLabel[p];
+  }
+}
+
+function showActions(p) { document.querySelectorAll(`#${p}-cp,#${p}-spk,#${p}-sav`).forEach(b => b.classList.add('visible')); }
+function hideActions(p) { document.querySelectorAll(`#${p}-cp,#${p}-spk,#${p}-sav`).forEach(b => b.classList.remove('visible')); }
+
+// ── TYPEWRITER ────────────────────────────────────────────────────────────────
+function typeText(el, text, p, done) {
+  el.innerHTML = '<span class="vt typing" id="ts-'+p+'"></span>';
+  const span = document.getElementById('ts-'+p);
+  const chars = [...text]; let i = 0, d = '';
+  const tick = () => {
+    if (i >= chars.length) { span.classList.remove('typing'); if(done) done(); return; }
+    const ch = chars[i++]; d += ch;
+    span.innerHTML = d.replace(/\n/g,'<br>');
+    el.scrollTop = el.scrollHeight;
+    setTimeout(tick, /[.!?…]/.test(ch) ? 90 : /[,;—]/.test(ch) ? 48 : 19);
+  };
+  tick();
+}
+
+// ── COPY ──────────────────────────────────────────────────────────────────────
+function cpOut(p) {
+  const txt = document.getElementById(p+'-out').innerText;
+  navigator.clipboard.writeText(txt).then(() => {
+    const b = document.getElementById(p+'-cp');
+    const orig = b.textContent; b.textContent = '✓ DONE!';
+    setTimeout(() => b.textContent = orig, 1400);
+    toast('📋 Villain line copied!');
+  });
+}
+
+// ── TEXT-TO-SPEECH ────────────────────────────────────────────────────────────
+function speak(p) {
+  const txt = document.getElementById(p+'-out').innerText;
+  if (!txt || txt.includes('stirs') || txt.includes('awaits')) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(txt);
+  utt.rate  = p === 'u' ? 1.22 : p === 'd' ? 0.83 : 0.76;
+  utt.pitch = p === 'u' ? 1.35 : p === 'd' ? 0.58 : 0.48;
+  const voices = speechSynthesis.getVoices();
+  const deep = voices.find(v => /male|daniel|google uk english male/i.test(v.name));
+  if (deep) utt.voice = deep;
+  speechSynthesis.speak(utt);
+  toast('🔊 THE VILLAIN SPEAKS…');
+}
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+// ── FAV FROM VILLAIN PAGE ─────────────────────────────────────────────────────
+async function saveFavFromPage(p) {
+  const id = lastId[p];
+  if (!id) return;
+  const data = await api('PATCH', '/favourite/'+id);
+  const btn = document.getElementById(p+'-sav');
+  if (data.is_favourite) {
+    btn.textContent = '💖 SAVED!'; toast('❤️ Added to Favourites!');
+  } else {
+    btn.textContent = '❤️ FAV'; toast('💔 Removed from Favourites');
+  }
+  setTimeout(() => { if(!data.is_favourite) btn.textContent='❤️ FAV'; }, 1400);
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+let histData = [], histFilter = '';
+
+async function loadHist() {
+  histData = await api('GET', '/history');
+  renderHist();
+}
+
+function setMf(btn, m) {
+  document.querySelectorAll('.mfb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); histFilter = m; renderHist();
+}
+
+function renderHist() {
+  const q = (document.getElementById('h-search')?.value || '').toLowerCase();
+  let items = histData;
+  if (histFilter) items = items.filter(i => i.mode === histFilter);
+  if (q) items = items.filter(i => i.input_text.toLowerCase().includes(q) || i.output_text.toLowerCase().includes(q));
+  const el = document.getElementById('hlist');
+  el.innerHTML = items.length ? items.map(cardHTML).join('') : '<div class="empty">Nothing found in the archives…</div>';
+}
+
+function cardHTML(i) {
+  const emo = {menacing:'😈',dramatic:'🎭',unhinged:'🌑'}[i.mode]||'☠';
+  const fav = i.is_favourite ? 'fav-on' : '';
+  const ts  = new Date(i.created_at).toLocaleString();
+  const safeOut = i.output_text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return `<div class="hcard" id="hc-${i.id}">
+    <div>
+      <div class="hcard-mode">${emo} ${i.mode.toUpperCase()} · ${i.intent}</div>
+      <div class="hcard-in">"${i.input_text}"</div>
+      <div class="hcard-out ${i.mode}">${i.output_text}</div>
+      <div class="hcard-time">${ts}</div>
+    </div>
+    <div class="hcard-acts">
+      <button class="hact ${fav}" onclick="toggleFav(${i.id},this)">❤️</button>
+      <button class="hact" onclick="cpLine('${safeOut}')">📋</button>
+      <button class="hact del" onclick="delEntry(${i.id})">🗑</button>
+    </div>
+  </div>`;
+}
+
+async function toggleFav(id, btn) {
+  const data = await api('PATCH', '/favourite/'+id);
+  btn.classList.toggle('fav-on', !!data.is_favourite);
+  const item = histData.find(i => i.id === id);
+  if (item) item.is_favourite = data.is_favourite;
+  toast(data.is_favourite ? '❤️ Added to Favourites!' : '💔 Removed');
+}
+
+async function delEntry(id) {
+  await api('DELETE', '/rewrite/'+id);
+  histData = histData.filter(i => i.id !== id);
+  document.getElementById('hc-'+id)?.remove();
+  if (!histData.length) document.getElementById('hlist').innerHTML = '<div class="empty">Archives empty…</div>';
+  toast('🗑 Banished from the archives');
+}
+
+async function clearHist() {
+  if (!confirm('Clear all non-favourited history?')) return;
+  await api('DELETE', '/history');
+  histData = histData.filter(i => i.is_favourite);
+  renderHist();
+  toast('🗑 Archives cleared');
+}
+
+function cpLine(txt) {
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Line copied!'));
+}
+
+// ── FAVS ──────────────────────────────────────────────────────────────────────
+async function loadFavs() {
+  const data = await api('GET', '/favourites');
+  const el = document.getElementById('flist');
+  el.innerHTML = data.length ? data.map(cardHTML).join('') : '<div class="empty">No favourites yet… star something worthy.</div>';
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+const RANKS = ['Pathetic Minion','Scheming Lackey','Dark Apprentice','Shadow Commander','Warlord of Chaos','Dread Sovereign','Eternal Overlord','The Dark Lord'];
+const RANK_XP= [0,50,150,300,500,800,1200,2000];
+
+async function loadStats() {
+  const s = await api('GET', '/stats');
+  document.getElementById('s-rank').textContent  = s.villain_rank;
+  document.getElementById('s-total').textContent = s.total_rewrites;
+  document.getElementById('s-men').textContent   = s.menacing_count;
+  document.getElementById('s-dra').textContent   = s.dramatic_count;
+  document.getElementById('s-unh').textContent   = s.unhinged_count;
+  document.getElementById('s-xp').textContent    = `${s.villain_xp} XP · ${s.xp_to_next} XP to next rank`;
+
+  // XP bar
+  const rIdx = RANKS.indexOf(s.villain_rank);
+  const prev = RANK_XP[rIdx] || 0;
+  const next = RANK_XP[rIdx+1] || prev + 1;
+  const pct  = rIdx >= RANKS.length-1 ? 100 : Math.min(100, ((s.villain_xp - prev) / (next - prev)) * 100);
+  document.getElementById('s-xpbar').style.width = pct + '%';
+
+  // Mode bars
+  const tot = s.total_rewrites || 1;
+  document.getElementById('mb-m').style.width = (s.menacing_count / tot * 100) + '%';
+  document.getElementById('mb-d').style.width = (s.dramatic_count / tot * 100) + '%';
+  document.getElementById('mb-u').style.width = (s.unhinged_count / tot * 100) + '%';
+
+  // Intents
+  const iEl = document.getElementById('s-intents');
+  iEl.innerHTML = s.top_intents?.length
+    ? s.top_intents.map(i => `<div class="irow"><span class="iname">${i.intent.toUpperCase()}</span><span class="icount">${i.count}</span></div>`).join('')
+    : '<div style="color:rgba(255,240,224,.3);font-style:italic;font-size:.9rem">No data yet…</div>';
+}
+
+// Init: load rank pill
+(async () => {
+  try {
+    const s = await api('GET', '/stats');
+    document.getElementById('rankPill').textContent = '☠ ' + s.villain_rank.toUpperCase();
+  } catch(e) {}
+})();
+
+// Ctrl+Enter shortcut
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') {
+      const id = ta.id;
+      if (id.startsWith('m-')) summon('menacing');
+      else if (id.startsWith('d-')) summon('dramatic');
+      else if (id.startsWith('u-')) summon('unhinged');
+    }
+  });
+});
+</script>
+</body>
+</html>
