@@ -1,6 +1,6 @@
 # ☠ VillanScript — Full Stack Edition
 
-A villain-themed text rewriter. Now a **proper full-stack web application.**
+A villain-themed text rewriter. 
 
 ---
 
@@ -36,10 +36,6 @@ pip install flask
 python app.py
 ```
 
-Then open: **http://localhost:5000**
-
----
-
 ## 📄 Pages
 
 | Page      | Description                                      |
@@ -71,7 +67,6 @@ Then open: **http://localhost:5000**
 
 ## ✨ Features
 
-### Existing (preserved)
 - 3 villain modes: Menacing, Dramatic, Unhinged
 - Page navigation with unique themes per mode
 - 30+ intent detection categories (regex-based NLP)
@@ -80,19 +75,6 @@ Then open: **http://localhost:5000**
 - Animated UI (skull bob, fire glow, screen shake on Unhinged)
 - Scanlines overlay, per-mode color themes
 - Ctrl+Enter shortcut
-
-### New (added in this version)
-- **🗄 Database** — every rewrite saved to SQLite automatically
-- **📜 History page** — browse, search, filter by mode, delete entries
-- **❤️ Favourites** — star any rewrite to save it permanently
-- **📊 Stats page** — total rewrites, per-mode counts, XP bar, top intents
-- **🏆 Villain Rank** — levels up as you use the app (8 ranks: Pathetic Minion → The Dark Lord)
-- **🔊 Text-to-Speech** — hear each villain line spoken in a dramatic voice
-- **❤️ FAV from villain page** — save lines directly without going to history
-- **🔍 Search archives** — real-time search across input and output text
-- **🎛 Mode filter** — filter history by Menacing / Dramatic / Unhinged
-- **📋 Copy from history** — copy any archived line with one click
-- **🔔 Toast notifications** — feedback on copy, fav, delete actions
 
 ---
 
@@ -109,4 +91,5 @@ Then open: **http://localhost:5000**
 | 1200   | Eternal Overlord    |
 | 2000   | The Dark Lord       |
 
-Each rewrite = **+10 XP**
+
+
